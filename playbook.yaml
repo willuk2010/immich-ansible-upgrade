@@ -1,0 +1,57 @@
+---
+  - name: Shell Examples
+    hosts: immich
+    become: yes
+    become_user: root
+    tasks:
+
+    - name: Ensure immich-ml service is stopped
+      service:
+        name: immich-ml.service
+        state: stopped
+
+    - name: Ensure immich-web service is stopped
+      service:
+        name: immich-web.service
+        state: stopped
+
+    - name: Backup App directory
+      copy:
+        src: /home/immich/app
+        dest: /home/immich/app.bck
+        remote_src: yes
+
+    - name: Copy update-release.sh
+      copy:
+        src: ./update-release.sh
+        dest: /home/immich/immich-in-lxc/update-release.sh
+        mode: '0755'
+        owner: immich
+        group: immich
+
+    - name: Execute update-release.sh
+      ansible.builtin.shell: sh /home/immich/immich-in-lxc/update-release.sh
+      args:
+        chdir: /home/immich/immich-in-lxc/
+      register: release_update_output
+      
+    - debug: msg="{{ release_update_output.stdout_lines }}"
+
+    - name: Execute install.sh
+      ansible.builtin.shell: sh /home/immich/immich-in-lxc/install.sh
+      args:
+        chdir: /home/immich/immich-in-lxc/
+      register: install_output
+      become_user: immich
+      
+    - debug: msg="{{ install.stdout_lines }}"
+
+    - name: Ensure immich-ml service is started
+      service:
+        name: immich-ml.service
+        state: started
+
+    - name: Ensure immich-web service is started
+      service:
+        name: immich-web.service
+        state: started
