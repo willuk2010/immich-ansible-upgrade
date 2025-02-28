@@ -16,11 +16,11 @@ The shell script, (update-release.sh) will change the .env and install.env REPO_
 
 - Check if an update is really needed, right now this will just change the tag, and upgrade even if its not needed
 - Zip backup, and keep only the last one
+- Move components to vars, so its easier to adapt to other installs
 
 
 # How to use,
 
 ```
 ansible-playbook -i inventory playbook.yaml
-
 ``` 
