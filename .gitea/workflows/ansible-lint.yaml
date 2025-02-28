@@ -1,0 +1,24 @@
+name: Ansible Lint
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Homelab-Deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # install ansbile
+      - name: Install Ansible
+        run: |
+          apt update -y
+          apt install python3-pip -y
+          python3 -m pip install ansible
+          python3 -m pip install ansible-lint             
+
+      - name: Run ansible-lint
+        run: |
+          ansible-lint -c ./.ansible-lint.yml ansible/playbook.*.yaml          
