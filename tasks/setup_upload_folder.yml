@@ -1,0 +1,12 @@
+---
+- name: Setup upload directory symlinks
+  ansible.builtin.file:
+    src: "{{ UPLOAD_DIR }}"
+    dest: "{{ INSTALL_DIR }}/app/upload"
+    state: link
+
+- name: Setup machine learning upload directory symlink
+  ansible.builtin.file:
+    src: "{{ UPLOAD_DIR }}"
+    dest: "{{ INSTALL_DIR }}/app/machine-learning/upload"
+    state: link

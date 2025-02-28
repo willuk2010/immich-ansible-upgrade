@@ -1,0 +1,28 @@
+---
+- name: Create custom start.sh script for web server
+  copy:
+    dest: "{{ INSTALL_DIR }}/app/start.sh"
+    content: |
+      #!/bin/bash
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+      set -a
+      . {{ INSTALL_DIR }}/runtime.env
+      set +a
+
+      cd {{ INSTALL_DIR }}/app
+      exec node {{ INSTALL_DIR }}/app/dist/main "$@"
+
+- name: Create custom start.sh script for machine learning
+  copy:
+    dest: "{{ INSTALL_DIR }}/app/machine-learning/start.sh"
+    content: |
+      #!/bin/bash
+      set -a
+      . {{ INSTALL_DIR }}/runtime.env
+      set +a
+
+      cd {{ INSTALL_DIR }}/app/machine-learning
+      . venv/bin/activate
+      exec gunicorn app.main:app -k app.config.CustomUvicornWorker -w 1 -b 127.0.0.1:3003

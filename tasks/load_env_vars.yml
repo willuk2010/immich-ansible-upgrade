@@ -1,0 +1,8 @@
+---
+- name: Load environment variables
+  ansible.builtin.shell: |
+    set -a
+    . {{ script_dir }}/.env
+    set +a
+  environment:
+    SCRIPT_DIR: "{{ script_dir }}"

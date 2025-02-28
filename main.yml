@@ -1,0 +1,24 @@
+---
+- name: Install or Upgrade Immich
+  hosts: immich
+  vars_files:
+    - vars/main.yml  # Reference to the variables file
+
+  tasks:
+    - name: Include task for install
+      ansible.builtin.debug:
+        msg: "Attempting to install Immich."
+      when: install is defined
+
+    - name: Include task for install
+      ansible.builtin.include_tasks: playbooks/install.yml
+      when: install is defined
+
+    - name: Include task for upgrade
+      ansible.builtin.debug:
+        msg: "Attempting to upgrade Immich"
+      when: upgrade is defined
+
+    - name: Include task for upgrade
+      ansible.builtin.include_tasks: playbooks/upgrade.yml
+      when: upgrade is defined

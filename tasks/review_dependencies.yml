@@ -1,0 +1,31 @@
+---
+- name: Check if ffmpeg is installed
+  ansible.builtin.shell: ffmpeg -version
+  register: ffmpeg_check
+  failed_when: ffmpeg_check.rc != 0
+  ignore_errors: true
+
+- name: Check if node.js is installed
+  ansible.builtin.shell: bash -ilc 'node -v'
+  register: node_check
+  failed_when: node_check.rc != 0
+  ignore_errors: true
+
+- name: Check if python3 is installed
+  ansible.builtin.shell: python3 --version
+  register: python_check
+  failed_when: python_check.rc != 0
+  ignore_errors: true
+
+- name: Check if git is installed
+  ansible.builtin.shell: git --version
+  register: git_check
+  failed_when: git_check.rc != 0
+  ignore_errors: true
+
+- name: Check if Nvidia driver is installed (if CUDA is enabled)
+  ansible.builtin.shell: nvidia-smi
+  register: nvidia_check
+  when: isCUDA | bool
+  failed_when: nvidia_check.rc != 0
+  ignore_errors: true

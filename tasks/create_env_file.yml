@@ -1,0 +1,17 @@
+---
+- name: Check if .env exists
+  stat:
+    path: "{{ script_dir }}/.env"
+  register: env_file
+
+- name: Create .env file from template if not exists
+  copy:
+    src: "{{ script_dir }}/install.env"
+    dest: "{{ script_dir }}/.env"
+    remote_src: yes
+  when: not env_file.stat.exists
+
+- name: Abort if .env.template is not found
+  fail:
+    msg: ".env.template not found, please clone the entire repo, exiting"
+  when: env_file.stat.exists == false and not lookup('file', script_dir + '/install.env')

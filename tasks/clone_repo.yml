@@ -1,0 +1,7 @@
+---
+- name: Clone or update the repository
+  ansible.builtin.git:
+    repo: "{{ REPO_URL }}"
+    dest: "{{ INSTALL_DIR }}/source"
+    version: "{{ latest_tag }}"
+    force: true

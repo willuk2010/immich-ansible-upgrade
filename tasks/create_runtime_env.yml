@@ -1,0 +1,8 @@
+---
+- name: Create runtime environment file if not exists
+  copy:
+    src: "{{ script_dir }}/runtime.env"
+    dest: "{{ INSTALL_DIR }}/runtime.env"
+    remote_src: yes
+  when: not lookup('file', "{{ INSTALL_DIR }}/runtime.env")
+  

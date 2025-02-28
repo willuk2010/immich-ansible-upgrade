@@ -1,0 +1,21 @@
+---
+# Global variables for the playbook
+
+# Define the directory where the playbook is located
+script_dir: "/home/immich/immich-in-lxc"  # Set the SCRIPT_DIR to the directory where the playbook is located
+
+# Set the repository URL and tags
+REPO_URL: "https://github.com/immich-app/immich"
+INSTALL_DIR: "/home/immich"
+UPLOAD_DIR: "/home/immich/uploads"
+
+# Optional proxy settings for npm and poetry
+PROXY_NPM: ""
+PROXY_POETRY: "https://pypi.org/simple/"
+
+# Optional CUDA or OpenVINO setup
+isCUDA: false
+
+# Add any other variables here that might be reused across tasks
+git:
+  repo: "https://api.github.com/repos/immich-app/immich/tags"

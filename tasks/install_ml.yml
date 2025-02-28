@@ -1,0 +1,56 @@
+---
+- name: Set up Immich machine learning environment
+  ansible.builtin.shell: |
+    python3 -m venv {{ INSTALL_DIR }}/ml/venv
+    . {{ INSTALL_DIR }}/ml/venv/bin/activate
+    pip install poetry
+    poetry install
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/machine-learning"
+
+- name: Handle Python 3.12 compatibility in pyproject.toml (if needed)
+  ansible.builtin.shell: |
+    . {{ INSTALL_DIR }}/ml/venv/bin/activate
+    python3_version=$(python3 --version 2>&1 | awk -F' ' '{print $2}' | awk -F'.' '{print $2}')
+    if [ $python3_version = 12 ]; then
+      sed -i -e 's/<3.12/<4/g' pyproject.toml
+      poetry update
+    fi
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/machine-learning"
+  when: ansible_facts['distribution_version'] is version('24', '>=')  # Assuming Ubuntu 24.04+ uses Python 3.12
+
+- name: Install CUDA-related packages if isCUDA is true
+  ansible.builtin.shell: |
+    . {{ INSTALL_DIR }}/ml/venv/bin/activate
+    poetry install --no-root --with dev --with cuda
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/machine-learning"
+  when: isCUDA | bool
+
+- name: Install OpenVINO-related packages if isCUDA is "openvino"
+  ansible.builtin.shell: |
+    . {{ INSTALL_DIR }}/ml/venv/bin/activate
+    poetry install --no-root --with dev --with openvino
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/machine-learning"
+  when: isCUDA == "openvino"
+
+- name: Install CPU-related packages if isCUDA is false or undefined
+  ansible.builtin.shell: |
+    . {{ INSTALL_DIR }}/ml/venv/bin/activate
+    poetry install --no-root --with dev --with cpu
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/machine-learning"
+  when: not isCUDA | bool or isCUDA == false
+
+- name: Copy machine learning results
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ INSTALL_DIR }}/app/machine-learning"
+    mode: '0755'
+    remote_src: true
+  with_items:
+    - "{{ INSTALL_DIR }}/source/machine-learning/ann"
+    - "{{ INSTALL_DIR }}/source/machine-learning/start.sh"
+    - "{{ INSTALL_DIR }}/source/machine-learning/app"

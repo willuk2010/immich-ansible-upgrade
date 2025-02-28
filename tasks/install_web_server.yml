@@ -1,0 +1,61 @@
+---
+- name: Remove previous build if exists
+  ansible.builtin.file:
+    path: "{{ INSTALL_DIR }}/app"
+    state: absent
+
+- name: Create necessary directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ INSTALL_DIR }}/app"
+    - "{{ INSTALL_DIR }}/geodata"
+    - "{{ UPLOAD_DIR }}"
+
+- name: Set npm proxy if configured
+  ansible.builtin.npm:
+    name: "{{ PROXY_NPM }}"
+    registry: "{{ PROXY_NPM }}"
+  when: PROXY_NPM is defined and PROXY_NPM != ''
+
+- name: Install dependencies and build web server
+  ansible.builtin.shell: |
+    bash -ilc "npm ci && npm run build && npm prune --omit=dev --omit=optional"
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/server"
+
+- name: Install npm dependencies for typescript sdk
+  ansible.builtin.shell: |
+    bash -ilc "npm ci && npm run build"
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/open-api/typescript-sdk"
+
+- name: Install npm dependencies for web
+  ansible.builtin.shell: |
+    bash -ilc "npm ci && npm run build"
+  args:
+    chdir: "{{ INSTALL_DIR }}/source/web"
+
+- name: Copy built server and web components
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ INSTALL_DIR }}/app/"
+    remote_src: true
+  with_items:
+    - "{{ INSTALL_DIR }}/source/server/node_modules"
+    - "{{ INSTALL_DIR }}/source/server/dist"
+    - "{{ INSTALL_DIR }}/source/server/bin"
+    - "{{ INSTALL_DIR }}/source/web/build"
+    - "{{ INSTALL_DIR }}/source/server/resources"
+    - "{{ INSTALL_DIR }}/source/server/package.json"
+    - "{{ INSTALL_DIR }}/source/server/package-lock.json"
+    - "{{ INSTALL_DIR }}/source/server/start.sh"
+    - "{{ INSTALL_DIR }}/source/LICENSE"
+
+- name: Unset npm proxy if configured
+  ansible.builtin.npm:
+    name: "{{ PROXY_NPM }}"
+    registry: ""
+  when: PROXY_NPM is defined and PROXY_NPM != ''
