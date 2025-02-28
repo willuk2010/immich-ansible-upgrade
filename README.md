@@ -1,5 +1,5 @@
 # Immich upgrade - Ansible
-The following repo, contains some ansible code, and a shell script that can upgrade a bare metal install of Immich to the latest version,
+The following repo, contains some ansible code, and a shell script that can upgrade an install of Immich on Proxmox LXC (https://github.com/loeeeee/immich-in-lxc.git) to the latest version,
 
 The shell script, (update-release.sh) will change the .env and install.env REPO_TAG to the latest, this is based on a script i found in this issue https://github.com/loeeeee/immich-in-lxc/issues/70
 
