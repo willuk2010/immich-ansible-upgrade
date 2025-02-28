@@ -1,57 +1,99 @@
 ---
-  - name: Shell Examples
-    hosts: immich
-    become: yes
-    become_user: root
-    tasks:
+- name: Upgrade Immich
+  hosts: immich
+  become: yes
+  become_user: root
 
-    - name: Ensure immich-ml service is stopped
-      service:
-        name: immich-ml.service
-        state: stopped
+  vars_files:
+    - vars/main.yaml
 
-    - name: Ensure immich-web service is stopped
-      service:
-        name: immich-web.service
-        state: stopped
+  tasks:
+    - name: Fetch GitHub tags using the API
+      ansible.builtin.uri:
+        url: "{{ git.repo }}"
+        method: GET
+        return_content: yes
+        headers:
+          Accept: "application/vnd.github.v3+json"
+      register: response
+      failed_when: response.status != 200
 
-    - name: Backup App directory
-      copy:
-        src: /home/immich/app
-        dest: /home/immich/app.bck
-        remote_src: yes
+    - name: Extract and sort tag names
+      set_fact:
+        sorted_tags: "{{ response.json | map(attribute='name') | sort(reverse=True) }}"
 
-    - name: Copy update-release.sh
-      copy:
-        src: ./update-release.sh
-        dest: /home/immich/immich-in-lxc/update-release.sh
-        mode: '0755'
-        owner: immich
-        group: immich
+    - name: Get the latest tag
+      set_fact:
+        latest_tag: "{{ sorted_tags[0] }}"
 
-    - name: Execute update-release.sh
-      ansible.builtin.shell: sh /home/immich/immich-in-lxc/update-release.sh
-      args:
-        chdir: /home/immich/immich-in-lxc/
-      register: release_update_output
-      
-    - debug: msg="{{ release_update_output.stdout_lines }}"
+    - name: Slurp file content and extract REPO_TAG and INSTALL_DIR values
+      ansible.builtin.slurp:
+        src: /home/immich/immich-in-lxc/.env
+      register: file_content
 
-    - name: Execute install.sh
-      ansible.builtin.shell: sh /home/immich/immich-in-lxc/install.sh
-      args:
-        chdir: /home/immich/immich-in-lxc/
-      register: install_output
-      become_user: immich
-      
-    - debug: msg="{{ install.stdout_lines }}"
+    - name: Parse environment variables
+      set_fact:
+        installed_tag: "{{ file_content.content | b64decode | regex_search('REPO_TAG=(\\S+)') | regex_replace('^REPO_TAG=', '') }}"
+        install_dir: "{{ file_content.content | b64decode | regex_search('INSTALL_DIR=(\\S+)') | regex_replace('^INSTALL_DIR=', '') }}"
 
-    - name: Ensure immich-ml service is started
-      service:
-        name: immich-ml.service
-        state: started
+    - name: Show the latest and installed tag
+      debug:
+        msg:
+          - "Latest immich version is: {{ latest_tag }}"
+          - "Installed immich version is: {{ installed_tag }}"
 
-    - name: Ensure immich-web service is started
-      service:
-        name: immich-web.service
-        state: started
+    - block:
+        - name: Compare latest_tag and installed_tag
+          debug:
+            msg: "The tags match!"
+          when: latest_tag == installed_tag
+
+        - name: Tags don't match, performing upgrade
+          debug:
+            msg: "The tags do not match, performing upgrade"
+          when: latest_tag != installed_tag
+
+        - name: Update REPO_TAG in env files
+          ansible.builtin.lineinfile:
+            path: "{{ item }}"
+            regexp: '^REPO_TAG=.*'
+            line: "REPO_TAG={{ latest_tag }}"
+          loop:
+            - "{{ install_dir }}/immich-in-lxc/install.env"
+            - "{{ install_dir }}/immich-in-lxc/.env"
+          when: latest_tag != installed_tag
+
+        - name: Ensure immich services are stopped
+          service:
+            name: "{{ item }}"
+            state: stopped
+          loop:
+            - immich-ml.service
+            - immich-web.service
+          when: latest_tag != installed_tag
+
+        - name: Backup App directory
+          copy:
+            src: "{{ install_dir }}/app"
+            dest: "{{ install_dir }}/app.bck"
+            remote_src: yes
+            creates: "{{ install_dir }}/app.bck"
+          when: latest_tag != installed_tag
+
+        - name: Execute install.sh
+          ansible.builtin.shell: sh "{{ install_dir }}/immich-in-lxc/install.sh"
+          args:
+            chdir: "{{ install_dir }}/immich-in-lxc/"
+            creates: "{{ install_dir }}/immich-in-lxc/install_complete.flag"
+          register: install_output
+          become_user: immich
+          when: latest_tag != installed_tag
+
+        - name: Ensure immich services are started
+          service:
+            name: "{{ item }}"
+            state: started
+          loop:
+            - immich-ml.service
+            - immich-web.service
+          when: latest_tag != installed_tag
