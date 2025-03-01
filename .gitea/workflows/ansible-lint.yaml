@@ -17,8 +17,10 @@ jobs:
           python3 -m venv /workspace/will/venv
           source /workspace/will/venv/bin/activate
           python3 -m pip install ansible
-          python3 -m pip install ansible-lint             
+          python3 -m pip install ansible-lint
+          deactivate
 
       - name: Run ansible-lint
         run: |
+          source /workspace/will/venv/bin/activate
           ansible-lint -c ./.ansible-lint.yml ansible/playbook.*.yaml
