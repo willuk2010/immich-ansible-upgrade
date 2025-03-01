@@ -5,7 +5,7 @@ on:
       - main
 
 jobs:
-  Homelab-Deploy:
+  Immich-Lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,9 +13,10 @@ jobs:
 
       # install ansbile
       - name: Install Ansible
+        working-directory: ./test
         run: |
-          apt update -y
-          apt install python3-pip -y
+          python3 -m venv ./test/venv
+          source ./test/venv
           python3 -m pip install ansible
           python3 -m pip install ansible-lint             
 
