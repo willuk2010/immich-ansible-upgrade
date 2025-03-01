@@ -13,10 +13,9 @@ jobs:
 
       # install ansbile
       - name: Install Ansible
-        working-directory: ./test
         run: |
-          python3 -m venv ./test/venv
-          source ./test/venv
+          python3 -m venv /workspace/will/venv
+          source /workspace/will/venv
           python3 -m pip install ansible
           python3 -m pip install ansible-lint             
 
