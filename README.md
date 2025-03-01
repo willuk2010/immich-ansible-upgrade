@@ -22,5 +22,5 @@ The shell script, (update-release.sh) will change the .env and install.env REPO_
 # How to use
 
 ```
-ansible-playbook -i inventory playbook.yaml
+ansible-playbook --user immich --private-key ~/.ssh/ansible -i ../home_inventory/inventory main.yml -e upgrade=true
 ``` 
