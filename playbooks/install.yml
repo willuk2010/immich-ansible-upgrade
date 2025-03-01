@@ -1,34 +1,34 @@
 ---
 - name: Include task for creating .env file
-  include_tasks: tasks/create_env_file.yml
+  ansible.builtin.include_tasks: tasks/create_env_file.yml
 
 - name: Include task for loading environment variables
-  include_tasks: tasks/load_env_vars.yml
+  ansible.builtin.include_tasks: tasks/load_env_vars.yml
 
 - name: Include task for reviewing dependencies
-  include_tasks: tasks/review_dependencies.yml
+  ansible.builtin.include_tasks: tasks/review_dependencies.yml
 
 - name: Include task for cloning the repository
-  include_tasks: tasks/clone_repo.yml
+  ansible.builtin.include_tasks: tasks/clone_repo.yml
 
 - name: Include task for installing the web server
-  include_tasks: tasks/install_web_server.yml
+  ansible.builtin.include_tasks: tasks/install_web_server.yml
 
 - name: Include task for installing machine learning dependencies
-  include_tasks: tasks/install_ml.yml
+  ansible.builtin.include_tasks: tasks/install_ml.yml
 
 - name: Include task for setting up the upload folder
-  include_tasks: tasks/setup_upload_folder.yml
+  ansible.builtin.include_tasks: tasks/setup_upload_folder.yml
 
 - name: Include task for downloading GeoNames data
-  include_tasks: tasks/download_geonames.yml
+  ansible.builtin.include_tasks: tasks/download_geonames.yml
 
 - name: Include task for creating custom start scripts
-  include_tasks: tasks/create_start_scripts.yml
+  ansible.builtin.include_tasks: tasks/create_start_scripts.yml
 
 - name: Include task for creating runtime environment file
-  include_tasks: tasks/create_runtime_env.yml
+  ansible.builtin.include_tasks: tasks/create_runtime_env.yml
 
 - name: Print installation completion message
-  debug:
+  ansible.builtin.debug:
     msg: "Installation completed! Please install systemd services to start Immich."
